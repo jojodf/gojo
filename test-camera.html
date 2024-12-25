@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>التقاط صورة بالكاميرا</title>
+</head>
+<body>
+    <h1>افتح الكاميرا والتقط صورة</h1>
+    <video id="video" autoplay></video>
+    <button id="capture">التقاط الصورة</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <p id="status"></p>
+
+    <script>
+        // تشغيل الكاميرا
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("لا يمكن تشغيل الكاميرا:", err);
+            });
+
+        // التقاط الصورة وإرسالها
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const status = document.getElementById('status');
+
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // تحويل الصورة إلى ملف وإرسالها
+            canvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'image.png');
+
+                fetch('https://example.com/upload', { // استبدل example.com برابط الخادم
+                    method: 'POST',
+                    body: formData
+                })
+                .then((response) => response.text())
+                .then((data) => {
+                    status.textContent = "تم إرسال الصورة بنجاح!";
+                })
+                .catch((error) => {
+                    console.error("حدث خطأ أثناء إرسال الصورة:", error);
+                    status.textContent = "حدث خطأ أثناء إرسال الصورة.";
+                });
+            });
+        });
+    </script>
+</body>
+</html>
